@@ -2254,7 +2254,7 @@ jsPsych.pluginAPI = (function() {
   }
 
   module.getKeyboardResponse = function(parameters) {
-
+    console.log('getKeyboarResponse parameters: ',parameters);
     //parameters are: callback_function, valid_responses, rt_method, persist, audio_context, audio_context_start_time, allow_held_key
 
     parameters.rt_method = (typeof parameters.rt_method === 'undefined') ? 'performance' : parameters.rt_method;
@@ -2266,8 +2266,10 @@ jsPsych.pluginAPI = (function() {
     var start_time;
     if (parameters.rt_method == 'performance') {
       start_time = performance.now();
-    } else if (parameters.rt_method === 'audio') {
+      console.log('perf start time: ', start_time);
+    } else if (parameters.rt_method == 'audio') {
       start_time = parameters.audio_context_start_time;
+      console.log('audio start time: ', start_time);
     }
 
     var case_sensitive = (typeof jsPsych.initSettings().case_sensitive_responses === 'undefined') ? false : jsPsych.initSettings().case_sensitive_responses;
@@ -2275,13 +2277,17 @@ jsPsych.pluginAPI = (function() {
     var listener_id;
 
     var listener_function = function(e) {
+      console.log('listener function parameters: ',parameters);
       var key_time;
       if (parameters.rt_method == 'performance') {
         key_time = performance.now();
-      } else if (parameters.rt_method === 'audio') {
+        console.log('perf key time: ', key_time);
+      } else if (parameters.rt_method == 'audio') {
         key_time = parameters.audio_context.currentTime
+        console.log('audio key time: ', key_time);
       }
       var rt = key_time - start_time;
+      console.log('rt: ', rt);
 
       // overiding via parameters for testing purposes.
       var minimum_valid_rt = parameters.minimum_valid_rt;
@@ -2294,6 +2300,7 @@ jsPsych.pluginAPI = (function() {
         rt_ms = rt_ms * 1000;
       }
       if(rt_ms < minimum_valid_rt) {
+        console.log('rt is below min rt. RT ',rt_ms,' min RT ', minimum_valid_rt);
         return;
       }
 
@@ -2335,6 +2342,7 @@ jsPsych.pluginAPI = (function() {
         if (!case_sensitive) {
           key = key.toLowerCase();
         }
+        console.log('calling callback function with ',key,' and ',rt_ms);
         parameters.callback_function({
           key: key,
           rt: rt_ms,

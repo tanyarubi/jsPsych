@@ -55,4 +55,46 @@ describe('minimum_valid_rt parameter', function(){
     }, 100)
     
   });
+
+  test('correctly prevents fast responses when set and the WebAudio clock is used', function(done) {
+
+    // not calling jsPsych.init so need to mock jsPsych.initSettings, which is used internally by getKeyboardResponse
+    // mock once for each call to getKeyboardResponse / utils.pressKey 
+    jsPsych.initSettings = jest.fn(function() { return {minimum_valid_rt: 500, case_sensitive_responses: false}; });
+    var audio_context_start_time = 0;
+    var audio_context = {
+      currentTime: audio_context_start_time + 0.1
+    };
+    var callback_fn = jest.fn();
+
+    jsPsych.pluginAPI.getKeyboardResponse({
+      callback_function: callback_fn,
+      valid_responses: ['a'],
+      rt_method: 'audio',
+      persist: false,
+      audio_context: audio_context,
+      audio_context_start_time: audio_context_start_time,
+      allow_held_key: false
+    });
+    utils.pressKey('a');
+    expect(callback_fn).not.toHaveBeenCalled();
+
+    audio_context.currentTime = audio_context_start_time + 2;
+    jsPsych.pluginAPI.getKeyboardResponse({
+      callback_function: callback_fn,
+      valid_responses: ['a'],
+      rt_method: 'audio',
+      persist: false,
+      audio_context: audio_context,
+      audio_context_start_time: audio_context_start_time,
+      allow_held_key: false
+    });
+    utils.pressKey('a');
+    setTimeout(function() {
+      expect(callback_fn).toHaveBeenCalledWith({key:'a', rt:2000});
+      done();
+    }, 200);
+    
+
+  });
 });
